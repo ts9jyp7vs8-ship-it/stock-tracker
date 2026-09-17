@@ -3,134 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自用券商大戶追蹤器</title>
+    <title>MAJOR INVESTORS TRACKER</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        /* 針對手機大按鈕與舒適點擊優化 */
-        button { min-height: 48px; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #fcfcfc; }
+        .tab-active { color: #000000; font-weight: 900; border-top: 2px solid #000000; }
+        .tab-inactive { color: #a1a1aa; border-top: 2px solid transparent; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-12">
+<body class="text-black font-sans min-h-screen pb-24">
 
-    <!-- 頂部導航 -->
-    <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
-        <h1 class="text-xl font-bold text-center">📊 券商籌碼每日觀測站</h1>
-        <p id="update-time" class="text-xs text-center text-blue-200 mt-1">更新時間：載入中...</p>
+    <!-- 頂部黑白極簡狀態欄 -->
+    <header class="border-b border-black p-6 sticky top-0 bg-white z-40">
+        <div class="max-w-md mx-auto flex justify-between items-baseline">
+            <h1 class="text-2xl font-black tracking-tighter uppercase">Broker Tracker</h1>
+            <span id="update-time" class="text-xs font-mono tracking-widest text-zinc-400">LOADING...</span>
+        </div>
     </header>
 
-    <main class="max-w-md mx-auto p-4 space-y-6">
-
-        <!-- 特別功能卡片：連續買超追蹤 -->
-        <section class="bg-white p-4 rounded-xl shadow">
-            <h2 class="text-lg font-bold text-red-600 border-b pb-2 mb-3">🔥 連續買超追蹤 (中斷即重算)</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-red-50 p-3 rounded-lg">
-                    <div class="text-sm font-semibold text-red-700">📈 連續買超 ≥ 3日</div>
-                    <ul id="streak-3-list" class="mt-2 text-sm font-medium space-y-1 text-gray-700">--</ul>
-                </div>
-                <div class="bg-purple-50 p-3 rounded-lg">
-                    <div class="text-sm font-semibold text-purple-700">👑 連續買超 ≥ 5日</div>
-                    <ul id="streak-5-list" class="mt-2 text-sm font-medium space-y-1 text-gray-700">--</ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- 券商切換大按鈕 (方便手機單手點擊) -->
-        <section>
-            <label class="block text-sm font-bold text-gray-500 mb-2">切換觀測券商：</label>
-            <div id="broker-buttons" class="grid grid-cols-2 gap-2">
-                <!-- 由 JS 動態生成大按鈕 -->
-            </div>
-        </section>
-
-        <!-- 當日前五大數據看板 -->
-        <section class="bg-white p-4 rounded-xl shadow">
-            <h2 id="current-broker-title" class="text-lg font-bold text-gray-800 border-b pb-2 mb-3">元大 - 當日前五大</h2>
+    <!-- 主內容區 -->
+    <main class="max-w-md mx-auto p-6">
+        
+        <!-- ==================== 分頁一：今日數據 ==================== -->
+        <div id="tab-today-content" class="space-y-8">
             
-            <div class="space-y-4">
-                <div>
-                    <h3 class="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">🟢 前五大買超股票</h3>
-                    <ul id="buy-list" class="divide-y divide-gray-100 mt-1"></ul>
+            <!-- 連續買超區塊 -->
+            <section class="border-b border-zinc-200 pb-6">
+                <h2 class="text-xs font-black tracking-widest text-zinc-400 uppercase mb-4">CONSECUTIVE BUY</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs font-mono tracking-wider text-zinc-500">STREAK ≥ 3 DAYS</div>
+                        <ul id="streak-3-list" class="mt-2 text-base font-black space-y-1">--</ul>
+                    </div>
+                    <div>
+                        <div class="text-xs font-mono tracking-wider text-zinc-500">STREAK ≥ 5 DAYS</div>
+                        <ul id="streak-5-list" class="mt-2 text-base font-black space-y-1">--</ul>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-sm font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded">🔴 前五大賣超股票</h3>
-                    <ul id="sell-list" class="divide-y divide-gray-100 mt-1"></ul>
+            </section>
+
+            <!-- 券商選擇按鈕（大字體、黑白對比） -->
+            <section>
+                <h2 class="text-xs font-black tracking-widest text-zinc-400 uppercase mb-3">SELECT BROKER</h2>
+                <div id="broker-buttons" class="grid grid-cols-2 gap-2 text-left">
+                    <!-- JS 動態生成 -->
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <!-- 當日數據明細 -->
+            <section class="space-y-6 pt-2">
+                <h3 id="current-broker-title" class="text-xl font-black tracking-tight border-b-2 border-black pb-2">元大 — TODAY</h3>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <h4 class="text-xs font-black tracking-widest bg-black text-white px-2 py-1 inline-block uppercase">TOP BUY 5</h4>
+                        <ul id="buy-list" class="divide-y divide-zinc-200 mt-2"></ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black tracking-widest bg-zinc-400 text-white px-2 py-1 inline-block uppercase">TOP SELL 5</h4>
+                        <ul id="sell-list" class="divide-y divide-zinc-200 mt-2"></ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== 分頁二：歷史紀錄 ==================== -->
+        <div id="tab-history-content" class="space-y-8 hidden">
+            
+            <!-- 歷史日期選擇 -->
+            <section>
+                <h2 class="text-xs font-black tracking-widest text-zinc-400 uppercase mb-2">SELECT DATE</h2>
+                <select id="history-date-select" class="w-full bg-white border-2 border-black rounded-none px-4 py-3 text-base font-black focus:outline-none appearance-none font-mono">
+                    <!-- JS 動態生成 -->
+                </select>
+            </section>
+
+            <!-- 歷史券商按鈕 -->
+            <section id="history-broker-buttons" class="grid grid-cols-2 gap-2">
+                <!-- JS 動態生成 -->
+            </section>
+
+            <!-- 歷史數據明細 -->
+            <section class="space-y-6">
+                <div class="border-b-2 border-black pb-2 flex justify-between items-baseline">
+                    <h3 id="history-broker-title" class="text-xl font-black tracking-tight">元大 — ARCHIVE</h3>
+                    <span id="history-badge-date" class="text-xs font-mono tracking-wider text-zinc-400">--</span>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <h4 class="text-xs font-black tracking-widest bg-black text-white px-2 py-1 inline-block uppercase">BUY RECORD</h4>
+                        <ul id="history-buy-list" class="divide-y divide-zinc-200 mt-2"></ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black tracking-widest bg-zinc-400 text-white px-2 py-1 inline-block uppercase">SELL RECORD</h4>
+                        <ul id="history-sell-list" class="divide-y divide-zinc-200 mt-2"></ul>
+                    </div>
+                </div>
+            </section>
+        </div>
 
     </main>
+
+    <!-- ==================== 底部極簡導航欄（無 Emoji） ==================== -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-50">
+        <div class="max-w-md mx-auto flex justify-around items-center h-16">
+            <button id="tab-today-btn" class="flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase transition-all tab-active">
+                TODAY
+            </button>
+            <button id="tab-history-btn" class="flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase transition-all tab-inactive">
+                HISTORY
+            </button>
+        </div>
+    </nav>
 
     <script>
         let stockData = null;
         const brokers = ["元大", "美商高盛", "台灣摩根史丹利", "摩根大通", "凱基"];
         let activeBroker = "元大";
+        let historyActiveBroker = "元大";
+        let historyActiveIndex = 0;
 
-        // 初始化：先讀本地快取，再連網抓最新 GitHub 資料
         async function init() {
             const cached = localStorage.getItem('my_stock_data');
             if (cached) {
                 stockData = JSON.parse(cached);
                 renderUI();
             }
-            
             try {
-                // 讀取同專案目錄下的 data.json
                 const response = await fetch('./data.json?t=' + new Date().getTime());
                 stockData = await response.json();
-                localStorage.setItem('my_stock_data', JSON.stringify(stockData)); // 覆蓋快取，關掉重開還在
+                localStorage.setItem('my_stock_data', JSON.stringify(stockData));
                 renderUI();
             } catch (e) {
-                console.log("尚無最新網路資料，使用快取或等待 Actions 產出", e);
+                console.log("Error loading online data", e);
+            }
+        }
+
+        document.getElementById('tab-today-btn').onclick = () => switchTab('today');
+        document.getElementById('tab-history-btn').onclick = () => switchTab('history');
+
+        function switchTab(tab) {
+            const todayBtn = document.getElementById('tab-today-btn');
+            const historyBtn = document.getElementById('tab-history-btn');
+            const todayContent = document.getElementById('tab-today-content');
+            const historyContent = document.getElementById('tab-history-content');
+
+            if (tab === 'today') {
+                todayBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-active";
+                historyBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-inactive";
+                todayContent.classList.remove('hidden');
+                historyContent.classList.add('hidden');
+            } else {
+                todayBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-inactive";
+                historyBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-active";
+                todayContent.classList.add('hidden');
+                historyContent.classList.remove('hidden');
+                renderHistoryUI();
             }
         }
 
         function renderUI() {
             if (!stockData) return;
             
-            document.getElementById('update-time').innerText = `更新時間：${stockData.last_update || '無資料'}`;
+            document.getElementById('update-time').innerText = `${stockData.last_update || 'NO DATE'}`;
             
-            // 渲染連續天數
-            renderList('streak-3-list', stockData.streak_3, 'text-red-600');
-            renderList('streak-5-list', stockData.streak_5, 'text-purple-600');
+            renderList('streak-3-list', stockData.streak_3);
+            renderList('streak-5-list', stockData.streak_5);
 
-            // 渲染券商按鈕
-            const btnContainer = document.getElementById('broker-buttons');
-            btnContainer.innerHTML = '';
-            brokers.forEach(name => {
-                const btn = document.createElement('button');
-                btn.className = `w-full rounded-lg text-base font-bold transition shadow-sm ${activeBroker === name ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`;
-                btn.innerText = name;
-                btn.onclick = () => { activeBroker = name; renderUI(); };
-                btnContainer.appendChild(btn);
+            renderBrokerButtons('broker-buttons', activeBroker, (name) => {
+                activeBroker = name;
+                renderUI();
             });
 
-            // 渲染當前券商的買賣超
-            document.getElementById('current-broker-title').innerText = `${activeBroker} — 當日前五大`;
-            const latestDayData = stockData.daily_records?.[0]?.data?.[activeBroker] || { buys: [], sells: [] };
-            
-            renderStockItems('buy-list', latestDayData.buys, 'text-emerald-600');
-            renderStockItems('sell-list', latestDayData.sells, 'text-rose-600');
+            document.getElementById('current-broker-title').innerText = `${activeBroker} — TODAY`;
+            const latestDayData = stockData.daily_records?.?.data?.[activeBroker] || { buys: [], sells: [] };
+            renderStockItems('buy-list', latestDayData.buys);
+            renderStockItems('sell-list', latestDayData.sells);
+
+            const select = document.getElementById('history-date-select');
+            if (stockData.daily_records && select.options.length === 0) {
+                select.innerHTML = stockData.daily_records.map((record, index) => 
+                    `<option value="${index}">${record.date}</option>`
+                ).join('');
+                select.onchange = (e) => {
+                    historyActiveIndex = parseInt(e.target.value);
+                    renderHistoryUI();
+                };
+            }
         }
 
-        function renderList(elementId, array, textColor) {
-            const el = document.getElementById(elementId);
-            if (!array || array.length === 0) { el.innerHTML = '<li>（暫無）</li>'; return; }
-            el.innerHTML = array.map(item => `<li class="${textColor}">• ${item}</li>`).join('');
-        }
+        function renderHistoryUI() {
+            if (!stockData || !stockData.daily_records || stockData.daily_records.length === 0) return;
 
-        function renderStockItems(elementId, items, colorClass) {
-            const el = document.getElementById(elementId);
-            if (!items || items.length === 0) { el.innerHTML = '<li class="py-2 text-sm text-gray-400 text-center">暫無交易數據</li>'; return; }
-            el.innerHTML = items.map((item, idx) => `
-                <li class="flex justify-between py-3 text-base border-b border-gray-50">
-                    <span class="font-medium text-gray-900">${idx+1}. ${item.name} (${item.id})</span>
-                    <span class="${colorClass} font-bold">${item.count.toLocaleString()} 張</span>
-                </li>
-            `).join('');
-        }
+            const selectedRecord = stockData.daily_records[historyActiveIndex];
+            document.getElementById('history-badge-date').innerText = selectedRecord.date;
+            document.getElementById('history-broker-title').innerText = `${historyActiveBroker} — ARCHIVE`;
 
-        init();
-    </script>
-</body>
-</html>
+            renderBrokerButtons('history-broker-buttons', historyActiveBroker, (name) => {

@@ -2,7 +2,7 @@ name: Daily Stock Crawler
 
 on:
   schedule:
-    - cron: '00 09 * * 1-5' # 台北時間週一至週五 17:00
+    - cron: '0 9 * * 1-5' # 台北時間週一至週五 17:00
   workflow_dispatch: # 允許手動點擊按鈕執行
 
 jobs:

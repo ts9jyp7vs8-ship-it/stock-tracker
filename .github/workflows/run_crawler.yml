@@ -2,12 +2,14 @@ name: Daily Stock Crawler
 
 on:
   schedule:
-    - cron: '30 10 * * 1-5' # 國際標準時(UTC) 10:30 = 台北時間週一至週五 17:00
+    - cron: '30 10 * * 1-5' # 台北時間週一至週五 18:30
   workflow_dispatch: # 允許手動點擊按鈕執行
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # 這裡大聲告訴 GitHub：這個機器人有寫入資料的權限！
     steps:
     - name: 簽出程式碼
       uses: actions/checkout@v3

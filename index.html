@@ -6,15 +6,15 @@
     <title>MAJOR INVESTORS TRACKER</title>
     <script src="https://tailwindcss.com"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: #fcfcfc; }
-        .tab-active { color: #000000; font-weight: 900; border-top: 2px solid #000000; }
-        .tab-inactive { color: #a1a1aa; border-top: 2px solid transparent; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #ffffff; }
+        .tab-active { color: #000000; font-weight: 900; border-top: 3px solid #000000; }
+        .tab-inactive { color: #d4d4d8; border-top: 3px solid transparent; }
     </style>
 </head>
 <body class="text-black font-sans min-h-screen pb-24">
 
     <!-- 頂部黑白極簡狀態欄 -->
-    <header class="border-b border-black p-6 sticky top-0 bg-white z-40">
+    <header class="border-b-2 border-black p-6 sticky top-0 bg-white z-40">
         <div class="max-w-md mx-auto flex justify-between items-baseline">
             <h1 class="text-2xl font-black tracking-tighter uppercase">Broker Tracker</h1>
             <span id="update-time" class="text-xs font-mono tracking-widest text-zinc-400">LOADING...</span>
@@ -28,21 +28,21 @@
         <div id="tab-today-content" class="space-y-8">
             
             <!-- 連續買超區塊 -->
-            <section class="border-b border-zinc-200 pb-6">
+            <section class="border-b border-black pb-6">
                 <h2 class="text-xs font-black tracking-widest text-zinc-400 uppercase mb-4">CONSECUTIVE BUY</h2>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <div class="text-xs font-mono tracking-wider text-zinc-500">STREAK ≥ 3 DAYS</div>
+                        <div class="text-xs font-mono tracking-wider text-zinc-400">STREAK ≥ 3 DAYS</div>
                         <ul id="streak-3-list" class="mt-2 text-base font-black space-y-1">--</ul>
                     </div>
                     <div>
-                        <div class="text-xs font-mono tracking-wider text-zinc-500">STREAK ≥ 5 DAYS</div>
+                        <div class="text-xs font-mono tracking-wider text-zinc-400">STREAK ≥ 5 DAYS</div>
                         <ul id="streak-5-list" class="mt-2 text-base font-black space-y-1">--</ul>
                     </div>
                 </div>
             </section>
 
-            <!-- 券商選擇按鈕（大字體、黑白對比） -->
+            <!-- 券商選擇按鈕 -->
             <section>
                 <h2 class="text-xs font-black tracking-widest text-zinc-400 uppercase mb-3">SELECT BROKER</h2>
                 <div id="broker-buttons" class="grid grid-cols-2 gap-2 text-left">
@@ -105,7 +105,7 @@
 
     </main>
 
-    <!-- ==================== 底部極簡導航欄（無 Emoji） ==================== -->
+    <!-- ==================== 底部導航欄 ==================== -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-50">
         <div class="max-w-md mx-auto flex justify-around items-center h-16">
             <button id="tab-today-btn" class="flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase transition-all tab-active">
@@ -118,13 +118,22 @@
     </nav>
 
     <script>
-        let stockData = null;
+        // 預設空的資料結構，確保就算 data.json 還沒同步完，網頁按鈕也能點擊切換
+        let stockData = {
+            last_update: "PENDING...",
+            streak_3: [],
+            streak_5: [],
+            daily_records: []
+        };
         const brokers = ["元大", "美商高盛", "台灣摩根史丹利", "摩根大通", "凱基"];
         let activeBroker = "元大";
         let historyActiveBroker = "元大";
         let historyActiveIndex = 0;
 
         async function init() {
+            // 初始化先渲染一次按鈕架構（確保沒撈到資料也能點按鈕）
+            renderUI();
+
             const cached = localStorage.getItem('my_stock_data');
             if (cached) {
                 stockData = JSON.parse(cached);
@@ -132,11 +141,13 @@
             }
             try {
                 const response = await fetch('./data.json?t=' + new Date().getTime());
-                stockData = await response.json();
-                localStorage.setItem('my_stock_data', JSON.stringify(stockData));
-                renderUI();
+                if (response.ok) {
+                    stockData = await response.json();
+                    localStorage.setItem('my_stock_data', JSON.stringify(stockData));
+                    renderUI();
+                }
             } catch (e) {
-                console.log("Error loading online data", e);
+                console.log("Waiting for data.json deployment...");
             }
         }
 
@@ -154,6 +165,7 @@
                 historyBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-inactive";
                 todayContent.classList.remove('hidden');
                 historyContent.classList.add('hidden');
+                renderUI();
             } else {
                 todayBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-inactive";
                 historyBtn.className = "flex flex-col items-center justify-center w-1/2 h-full text-xs font-black tracking-widest uppercase tab-active";
@@ -164,9 +176,7 @@
         }
 
         function renderUI() {
-            if (!stockData) return;
-            
-            document.getElementById('update-time').innerText = `${stockData.last_update || 'NO DATE'}`;
+            document.getElementById('update-time').innerText = `${stockData.last_update || 'PENDING'}`;
             
             renderList('streak-3-list', stockData.streak_3);
             renderList('streak-5-list', stockData.streak_5);
@@ -177,12 +187,12 @@
             });
 
             document.getElementById('current-broker-title').innerText = `${activeBroker} — TODAY`;
-            const latestDayData = stockData.daily_records?.?.data?.[activeBroker] || { buys: [], sells: [] };
+            const latestDayData = stockData.daily_records?.[0]?.data?.[activeBroker] || { buys: [], sells: [] };
             renderStockItems('buy-list', latestDayData.buys);
             renderStockItems('sell-list', latestDayData.sells);
 
             const select = document.getElementById('history-date-select');
-            if (stockData.daily_records && select.options.length === 0) {
+            if (stockData.daily_records && stockData.daily_records.length > 0 && select.options.length === 0) {
                 select.innerHTML = stockData.daily_records.map((record, index) => 
                     `<option value="${index}">${record.date}</option>`
                 ).join('');
@@ -194,10 +204,8 @@
         }
 
         function renderHistoryUI() {
-            if (!stockData || !stockData.daily_records || stockData.daily_records.length === 0) return;
-
-            const selectedRecord = stockData.daily_records[historyActiveIndex];
-            document.getElementById('history-badge-date').innerText = selectedRecord.date;
-            document.getElementById('history-broker-title').innerText = `${historyActiveBroker} — ARCHIVE`;
-
             renderBrokerButtons('history-broker-buttons', historyActiveBroker, (name) => {
+                historyActiveBroker = name;
+                renderHistoryUI();
+            });
+

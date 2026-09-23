@@ -1,7 +1,32 @@
 {
-  "last_update": "2026-09-22",
+  "last_update": "2026-09-23",
   "consecutive_buys": {},
   "daily_records": [
+    {
+      "date": "2026-09-23",
+      "data": {
+        "元大": {
+          "buys": [],
+          "sells": []
+        },
+        "美商高盛": {
+          "buys": [],
+          "sells": []
+        },
+        "台灣摩根史丹利": {
+          "buys": [],
+          "sells": []
+        },
+        "摩根大通": {
+          "buys": [],
+          "sells": []
+        },
+        "凱基": {
+          "buys": [],
+          "sells": []
+        }
+      }
+    },
     {
       "date": "2026-09-22",
       "data": {
